@@ -1,0 +1,67 @@
+name: Dev API Build and Push .NET Docker Image
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'DemoApi/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'DemoApi/**'
+  # เพิ่ม manual trigger
+  workflow_dispatch:
+
+env:
+  # ชื่อ image สำหรับ GHCR
+  IMAGE_NAME: demo-user-api
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # ล็อกอินเข้า GitHub Container Registry
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract metadata สำหรับ Docker
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=long
+            type=ref,event=branch
+            type=ref,event=tag
+            latest
+
+      # Build และ push Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: DemoApi/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # # Set up Kubeconfig
+      # - name: Set up Kubeconfig
+      #   run: |
+      #     mkdir -p ~/.kube
+      #     echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+      # - name: Rollout restart Deployment in Kubernetes
+      #   run: |
+      #     kubectl rollout restart deployment {deploymentName} -n {namespace}
