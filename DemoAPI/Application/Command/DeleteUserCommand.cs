@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using System.Net.Http;
+using static DemoAPI.Model.Response.GetAllUserReponseModel;
 
 namespace DemoAPI.Application.Command
 {
@@ -17,10 +18,13 @@ namespace DemoAPI.Application.Command
         }
         public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
-            var response = await _httpClient.DeleteAsync($"https://jsonplaceholder.typicode.com/users/{request.Id}", cancellationToken);
+            var mUser = await _httpClient.GetFromJsonAsync<List<User>>("https://jsonplaceholder.typicode.com/users", cancellationToken);
+            var exists = mUser.FirstOrDefault(x => x.Id == request.Id);
 
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            if (exists == null)
                 return false;
+
+            var response = await _httpClient.DeleteAsync($"https://jsonplaceholder.typicode.com/users/{request.Id}", cancellationToken);
 
             response.EnsureSuccessStatusCode();
             return true;
