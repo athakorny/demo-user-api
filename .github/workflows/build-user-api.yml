@@ -4,11 +4,11 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'DemoApi/**'
+      - 'DemoAPI/**'
   pull_request:
     branches: [ main ]
     paths:
-      - 'DemoApi/**'
+      - 'DemoAPI/**'
   # เพิ่ม manual trigger
   workflow_dispatch:
 
@@ -52,7 +52,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: DemoApi/Dockerfile
+          file: DemoAPI/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
